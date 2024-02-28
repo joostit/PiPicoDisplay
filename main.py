@@ -8,7 +8,7 @@ import time
 class Main(object):
 
     def run(self):
-        print("RUN")
+        print("Runnnig")
         self.btnTimer = Timer()
         self.btnTimer.init(freq=1000, mode=Timer.PERIODIC, callback=self.btnLoop)
 
@@ -19,12 +19,8 @@ class Main(object):
         self. timer.init(freq=2, mode=Timer.PERIODIC, callback=self.blink)
 
     def __init__(self):
-
-        print("Init")
-
         self.display=PicoOled13.get()
         self.display.clear()
-        self.display.text("Nothing is pressed",0,0,0xffff)
 
         self.buttonACnt = 0
         self.buttonBCnt = 0
@@ -37,12 +33,10 @@ class Main(object):
         self.updateDisplay = True
 
         self.led = machine.Pin("LED", machine.Pin.OUT)
-
         self.led.on()
 
 
     def btnLoop(self, timer):
-
         if not self.btnAPressed:
             if self.display.is_pressed(self.display.KEY0):
                 self.btnAPressed = True
@@ -71,7 +65,6 @@ class Main(object):
 
 
     def blink(self, timer):
-        print("LED Toggle")
         self.led.toggle()
 
 
