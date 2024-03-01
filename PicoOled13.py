@@ -155,9 +155,10 @@ class OLED_1inch3_SPI(framebuf.FrameBuffer):
             for num in range(0,16):
                 self.write_data(self.buffer[page*16+num])
 
-    def clear(self):
+    def clear(self, autoShow=True):
         self.fill(self.black)
-        self.show()
+        if autoShow:
+            self.show()
 
     def text(self,s,x0,y0,col=0xffff):
         x=x0
