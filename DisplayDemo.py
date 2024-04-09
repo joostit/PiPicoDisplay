@@ -76,16 +76,22 @@ class DisplayDemo(piPicoRunnerBase):
 
         if self.updateDisplay:
             self.updateDisplay  = False
-            self.display.clear(False)
+            self.clearDisplay()
             self.display.text("Key0: " + str(self.buttonACnt) , 0,0)
             self.display.text("Key1: " + str(self.buttonBCnt) , 0,15)
             self.display.text(str(self.runCnt) , 100,55)
             self.display.show(0, 23)
             
+            #self.display.show()
+            
 
     # Gets called by the BlinkTimer to toggle the onboard LED on the Pi Pico
     def blink(self, timer):
         self.led.toggle()
+        
+    
+    def clearDisplay(self):
+        self.display.fill(0)
 
 
 # Application runs from here

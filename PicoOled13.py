@@ -13,6 +13,7 @@ CS = 9
 KEY0=15
 KEY1=17
 
+# Display object
 display=None
 
 class OLED_1inch3_SPI(framebuf.FrameBuffer):
@@ -92,7 +93,7 @@ class OLED_1inch3_SPI(framebuf.FrameBuffer):
         self.cs(1)
 
     def init_display(self):
-        """Initialize dispaly"""
+        """Initialize display"""
         self.rst(1)
         time.sleep(0.001)
         self.rst(0)
@@ -134,18 +135,21 @@ class OLED_1inch3_SPI(framebuf.FrameBuffer):
         self.write_cmd(0x35)
 
         self.write_cmd(0xad)   # set charge pump enable
-        self.write_cmd(0x8a)    #Set DC-DC enable (a=0:disable; a=1:enable)
+        self.write_cmd(0x8a)   #Set DC-DC enable (a=0:disable; a=1:enable)
 
         self.on()
 
-    def show(self, start=0, end=-1):
-        if end < 0:
+    # Show function
+    def show(self, start=0, end=64):
+        # Range limiting for show
+        if start < 0 or 64 < start:
+            start = 0
+        if end < 0 or 64 < end:
             end = self.height
 
+        # start is lower than the end, by definition
         if end < start:
-            temp = end
-            end = start
-            start = temp
+            start,end = end,start
 
         self.write_cmd(0xb0)
         for page in range(start,end):
@@ -155,32 +159,65 @@ class OLED_1inch3_SPI(framebuf.FrameBuffer):
             for num in range(0,16):
                 self.write_data(self.buffer[page*16+num])
 
-    def clear(self, autoShow=True):
+    def clear(self):
         self.fill(self.black)
-        if autoShow:
-            self.show()
+        self.show()
 
-    def text(self,s,x0,y0,col=0xffff):
+    def text(self,s,x0,y0,col=0xffff,wrap=1,just=0):
+        if len(s)==0:
+            return(x0, y0)
+
         x=x0
+        pixels = bytearray([])
         for i in range(len(s)):
             C = ord(s[i])
             if C < 32 or C > 127:
                 C = 32
             cdata = self.font[C - 32]
-            if x+len(cdata) > self.width:
-                x=0
+
+            # check wrap/clip at edge of screen
+            if len(pixels) and \
+                    ((just==0 and x+len(pixels)+len(cdata) > self.width) or \
+                    (just==1 and x-len(pixels)-len(cdata) < 0) or \
+                    (just==2 and x-len(pixels)/2-len(cdata) < 0) or \
+                    (just==2 and x+len(pixels)/2+len(cdata) > self.width)):
+                if col==0:
+                    for i, v in enumerate(pixels): pixels[i] = 0xFF & ~ v
+                fb = framebuf.FrameBuffer(pixels, len(pixels), 8, framebuf.MONO_VLSB)
+                if just==0:
+                    self.blit(fb, x, y0)
+                elif just==1:
+                    self.blit(fb, x-len(pixels), y0)
+                else:
+                    self.blit(fb, x-int(len(pixels)/2), y0)
+                pixels = bytearray([])
+
+                if wrap == 0:
+                    # clip text at right of screen
+                    return [x,y0+9]
+                if wrap == 1:
+                    # wrap to start of line
+                    x=0
+                else:
+                    # wrap to X0 co-ordinate
+                    x=x0
                 y0=y0+9
-            for j in range(len(cdata)):
-                if 0 <= x and x < self.width:
-                    vline_data = cdata[j]
-                    y = y0
-                    while vline_data:
-                        if  vline_data & 1:
-                            if  0 <= y and y < self.height:
-                                self.pixel(x, y, col);
-                        vline_data=vline_data>>1
-                        y=y+1
-                x=x+1
+
+                if y0 > self.height:
+                    return [x,y0+9]
+
+            pixels += bytearray(cdata)
+
+        if col==0:
+            for i, v in enumerate(pixels): pixels[i] = 0xFF & ~ v
+        fb = framebuf.FrameBuffer(pixels, len(pixels), 8, framebuf.MONO_VLSB)
+        if just==0:
+            self.blit(fb, x, y0)
+        elif just==1:
+            self.blit(fb, x-len(pixels), y0)
+        else:
+            self.blit(fb, x-int(len(pixels)/2), y0)
+
         return [x,y0+9]
 
 def get():
@@ -188,3 +225,7 @@ def get():
     if display is None:
         display=OLED_1inch3_SPI()
     return display
+
+
+if __name__=='__main__':
+    test()
