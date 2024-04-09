@@ -1,27 +1,24 @@
 from machine import Pin, Timer
+from PiPicoRunnerBase import piPicoRunnerBase
 import PicoOled13
 import _thread
 import machine
 import time
 
 
-class DisplayDemo(object):
+class DisplayDemo(piPicoRunnerBase):
 
-    # Main run method for the Display Demo
-    def run(self):
+    def beforeRun(self):
         print("Runnning")
-        self.fastloopTimer = Timer()
-        self.fastloopTimer.init(freq=1000, mode=Timer.PERIODIC, callback=self.fastLoopTriggered)
-
-        self.displayTimer = Timer()
-        self.displayTimer.init(freq=20, mode=Timer.PERIODIC, callback=self.displayTimerTriggered)
-
+        
         self.blinkTimer = Timer()
         self.blinkTimer.init(freq=2, mode=Timer.PERIODIC, callback=self.blink)
 
 
     # Constructor
     def __init__(self):
+        super().__init__()
+        
         self.display=PicoOled13.get()
         self.display.clear()
 
@@ -40,8 +37,8 @@ class DisplayDemo(object):
         self.led.on()
 
 
-    # Gets called every 1ms by the fastloopTimer. Put application logic here
-    def fastLoopTriggered(self, timer):
+    # Overrides FastTick timer. Gets called every 1ms by the fastloopTimer. Put application logic here
+    def fastTick(self):
         self.checkBtnA()
         self.checkBtnB()
     
@@ -69,8 +66,8 @@ class DisplayDemo(object):
                 self.btnBPressed = False
     
 
-    #Gets called by the DisplayTimer to update the display
-    def displayTimerTriggered(self,timer):
+    # Overrides SlowTick timer. #Gets called by the DisplayTimer to update the display
+    def slowTick(self):
         if not self.displayUpdating:
             self.displayUpdating = True
             _thread.start_new_thread(self.displayUpdateThreadRunner, ())
@@ -98,7 +95,7 @@ class DisplayDemo(object):
 # Demo runs from here
 if __name__ == '__main__':
     runner = DisplayDemo()
-    runner.run()
+    runner.startRun()
 
     #Endless loop to prevent the script from exiting
     while True:
