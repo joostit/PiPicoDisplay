@@ -21,7 +21,7 @@
 #################################################################################
 #
 # PiPicoRunnerBase
-# Author: DevOats
+# Author: Joost/DevOats
 # A Simple Base class to easily run micropython projects with configurable fast and a slow periodical Ticks.
 # Both Ticks are separately protected against multiple execution and are only called if the previous call has finished executing
 #
